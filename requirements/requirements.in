@@ -11,3 +11,5 @@ pytest-django
 DjangoHexadecimalField
 
 Pillow
+
+djangorestframework
