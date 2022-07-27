@@ -5,19 +5,19 @@ from django.db.models import CheckConstraint, Q
 
 class User(AbstractUser):
 
-    login = models.CharField(
-        'login',
+    username = models.CharField(
+        'username',
         max_length=150,
         unique=True,
         db_index=True
     )
-    name = models.CharField(
-        'name',
+    first_name = models.CharField(
+        'first_name',
         max_length=150,
         unique=False
     )
-    surname = models.CharField(
-        'surname',
+    last_name = models.CharField(
+        'last_name',
         max_length=150,
         unique=False
     )

@@ -4,9 +4,9 @@ from users.models import User
 
 class UserAdmin(admin.ModelAdmin):
     list_display = (
-        'login',
-        'name',
-        'surname',
+        'username',
+        'first_name',
+        'last_name',
         'email'
     )
     search_fields = ('username', 'email')

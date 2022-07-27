@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+  {% load static %}
+  {% block title %}
+    {{ title }}
+  {% endblock title %}
+
+  {% block content %}
+    picture1
+    <br></br>
+    <main>
+      <div class="container py-5">
+        {% for recipe in object_list %}
+          <p>
+            {{ recipe.name  }}
+          <p>
+            {{ recipe.text }}
+        {% endfor %}
+        <p>
+        Picture:
+        <br>
+        <img src={% static "images/temp_W1bTefE.png" %}>
+        <br>
+        <img src={% static "images/temp_9tWXR3M.png" %}>
+      </div>
+    </main>
+  {% endblock content %}
+
