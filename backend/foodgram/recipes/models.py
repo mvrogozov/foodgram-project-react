@@ -1,11 +1,10 @@
 from django.db import models
 from users.models import User
 from core.models import CreatedModel
-from djangoHexadecimal.fields import HexadecimalField
 
 
 class Ingredient(models.Model):
-    ingredient_name = models.CharField(
+    name = models.CharField(
         'Название ингредиента',
         max_length=128
     )
@@ -15,7 +14,7 @@ class Ingredient(models.Model):
     )
 
     def __str__(self):
-        return self.ingredient_name
+        return self.name
 
 
 class Tag(models.Model):
@@ -84,10 +83,12 @@ class Recipe(CreatedModel):
 class Ingredient_for_recipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
+        related_name='ingredient',
         on_delete=models.CASCADE
     )
     ingredient_name = models.ForeignKey(
         Ingredient,
+        related_name='for_recipe',
         on_delete=models.CASCADE
     )
     amount = models.FloatField(
@@ -157,19 +158,20 @@ class Favorite(models.Model):
         return f'{self.user.username} - {self.recipe.name}'
 
 
-class ShoppingList(models.Model):
+class ShoppingCart(models.Model):
     user = models.ForeignKey(
         User,
-        related_name='shopping_list',
+        related_name='buyer',
         verbose_name='Пользователь',
         help_text='Пользователь',
         on_delete=models.CASCADE
     )
-    recipes = models.ManyToManyField(
+    recipe = models.ForeignKey(
         Recipe,
-        related_name='shopping_list',
+        related_name='shopping_cart',
         verbose_name='Список покупок',
-        help_text='Список покупок'
+        help_text='Список покупок',
+        on_delete=models.CASCADE
     )
 
     def __str__(self):

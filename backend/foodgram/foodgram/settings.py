@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
     'sorl.thumbnail',
+    'reportlab'
 ]
 
 MIDDLEWARE = [

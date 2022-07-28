@@ -68,7 +68,9 @@ oauthlib==3.2.0
 packaging==21.3
     # via pytest
 pillow==9.2.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   reportlab
 pluggy==1.0.0
     # via pytest
 psycopg2-binary==2.9.3
@@ -97,6 +99,8 @@ pytz==2022.1
     # via
     #   django
     #   djangorestframework
+reportlab==3.6.11
+    # via -r requirements.in
 requests==2.28.1
     # via
     #   coreapi

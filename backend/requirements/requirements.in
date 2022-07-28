@@ -23,3 +23,5 @@ django-debug-toolbar
 sorl-thumbnail
 
 gunicorn
+
+reportlab

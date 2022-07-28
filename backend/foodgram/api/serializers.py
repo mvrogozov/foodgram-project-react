@@ -47,8 +47,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class IngerdientSerializer(serializers.ModelSerializer):
 
-    name = serializers.CharField(source='ingredient_name')
-
     class Meta:
         model = Ingredient
         fields = (
