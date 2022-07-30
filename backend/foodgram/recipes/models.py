@@ -75,6 +75,12 @@ class Recipe(CreatedModel):
 
     class Meta:
         ordering = ('-created',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('author', 'name'),
+                name='uniquie recipe for author'
+            )
+        ]
 
     def __str__(self):
         return self.name
@@ -95,6 +101,14 @@ class Ingredient_for_recipe(models.Model):
         'Количество',
         max_length=10
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('recipe', 'ingredient_name'),
+                name='unique_ingredient'
+            )
+        ]
 
     def __str__(self):
         return self.recipe.name

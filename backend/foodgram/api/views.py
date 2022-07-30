@@ -8,12 +8,14 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.viewsets import ModelViewSet
 from users.models import User
 from recipes.models import Tag, Recipe, Ingredient, ShoppingCart
-from .serializers import TagSerializer, RecipeSerializer, IngerdientSerializer
+from .serializers import TagSerializer, RecipeSerializer, IngredientSerializer
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 import io
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import mm, inch
+from reportlab.platypus import PageBreak
 from django.conf import settings
 
 
@@ -53,22 +55,35 @@ class RecipeViewSet(ModelViewSet):
             print('ingredients= ', ingredients, '\n')
             for ingredient in ingredients:
                 ingredient_for_recipe = ingredient.for_recipe.get(recipe=recipe)
-                shopping_list.setdefault(ingredient.name, 0)
-                shopping_list[ingredient.name] += ingredient_for_recipe.amount
-                print('ingredient= ', ingredient, 'amount=', ingredient_for_recipe.amount)
+                shopping_list.setdefault(ingredient.name, [0, ''])
+                shopping_list[ingredient.name][0] += ingredient_for_recipe.amount
+                shopping_list[ingredient.name][1] = ingredient.measurement_unit
+                print('ingredient= ', ingredient, 'amount=', ingredient_for_recipe.amount, '_', ingredient.measurement_unit)
             print('list=', shopping_list, '\n')
 
+        FONT_SIZE = 12
+        A4_WIDTH = 210 * mm
+        A4_HEIGHT = 297 * mm
         buffer = io.BytesIO()
         pdf_object = canvas.Canvas(buffer, pagesize='A4')
-        #pdfmetrics.registerFont(TTFont('Mariupol-Regular', os.path.join(settings.TEMPLATES_DIR, 'Mariupol-Regular.ttf'), 'UTF-8'))
-        pdfmetrics.registerFont(TTFont('Mariupol-Regular', 'Mariupol-Regular.ttf', 'UTF-8'))
-        pdf_object.setFont('Mariupol-Regular', 12)
-        x = 10
-        y = 730
+        pdfmetrics.registerFont(TTFont('Arial', os.path.join(settings.TEMPLATES_DIR, 'arial.ttf'), 'UTF-8'))
+        pdf_object.setFillColorRGB(0.2, 0.2, 0.9)
+        x = 20
+        y = A4_HEIGHT - 150
+        pdf_object.setFont('Arial', FONT_SIZE + 4)
+        pdf_object.drawString(x + 200, y + 50, 'Список покупок.')
+        pdf_object.setFont('Arial', FONT_SIZE)
         for item, amount in shopping_list.items():
-            pdf_object.drawString(x, y, item + ': ' + str(amount))
+            #pdf_object.drawString(x, y, item + ': ' + str(amount[0]) + amount[1])
+            pdf_object.drawString(x, y, f'{item}: {str(amount[0])} {amount[1]}')
             y -= 20
-        pdf_object.drawString(x, y, 'TEST string test STRING 123456789')
+            if y < 30:
+                pdf_object.showPage()
+                pdf_object._pageNumber += 1
+                pdf_object.setFont('Arial', FONT_SIZE)
+                pdf_object.setFillColorRGB(0.2, 0.2, 0.7)
+                y = A4_HEIGHT - 10
+        pdf_object.drawString(x, y, '_____________________________________________')
         pdf_object.showPage()
         pdf_object.save()
         print(pdf_object)
@@ -88,4 +103,4 @@ class TagViewSet(ModelViewSet):
 
 class IngredientViewSet(ModelViewSet):
     queryset = Ingredient.objects.all()
-    serializer_class = IngerdientSerializer
+    serializer_class = IngredientSerializer
