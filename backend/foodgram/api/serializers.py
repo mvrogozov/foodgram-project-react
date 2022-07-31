@@ -89,6 +89,13 @@ class RecipeSerializer(serializers.ModelSerializer):
             'name',
             'tags',
         ]
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=model.objects.all(),
+                fields=('author', 'name'),
+                message=('У Вас есть рецепт с таким именем')
+            )
+        ]
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredient')
@@ -104,4 +111,5 @@ class RecipeSerializer(serializers.ModelSerializer):
                 recipe=recipe,
                 amount=ingredient.get('amount')
             )
+        recipe.tags.set(tags)
         return recipe

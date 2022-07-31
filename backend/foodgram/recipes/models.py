@@ -62,12 +62,12 @@ class Recipe(CreatedModel):
     ingredients = models.ManyToManyField(
         Ingredient,
         through='Ingredient_for_recipe',
-        related_name='recipies',
+        related_name='recipes',
         verbose_name='Список ингредиентов'
     )
     tags = models.ManyToManyField(
         Tag,
-        related_name='recipies'
+        related_name='recipes'
     )
     cooking_time = models.IntegerField(
         'Время приготовления',
