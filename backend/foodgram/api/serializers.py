@@ -69,24 +69,22 @@ class ForRecipeSerializer(serializers.Field):
         return serializer.validated_data
 
 
-
 class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
-    #ingredients = Ingredient_for_recipeSerializer(many=True)
-
     ingredients = ForRecipeSerializer(
         source='ingredient'
     )
-    
+
     class Meta:
         model = Recipe
         fields = [
+            'name',
             'author',
             'text',
+            'id',
             'ingredients',
             'cooking_time',
             'image',
-            'name',
             'tags',
         ]
         validators = [
@@ -113,3 +111,23 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
         recipe.tags.set(tags)
         return recipe
+
+    def update(self, instance, validated_data):
+        ingredients = validated_data.pop('ingredient')
+        tags = validated_data.pop('tags')
+        recipe = Recipe.objects.filter(pk=instance.id)
+        recipe.update(**validated_data)
+        Ingredient_for_recipe.objects.filter(recipe=instance).delete()
+        for ingredient in ingredients:
+            ingredient_instance = get_object_or_404(
+                Ingredient,
+                pk=ingredient.get('ingredient_name')
+            )
+            Ingredient_for_recipe.objects.get_or_create(
+                ingredient_name=ingredient_instance,
+                recipe=instance,
+                amount=ingredient.get('amount')
+            )
+            
+        instance.tags.set(tags)
+        return instance
