@@ -8,7 +8,8 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.viewsets import ModelViewSet
 from users.models import User
 from recipes.models import Tag, Recipe, Ingredient, ShoppingCart
-from .serializers import TagSerializer, RecipeSerializer, IngredientSerializer
+from .serializers import TagSerializer, RecipeSerializer, IngredientSerializer, UserSerializer
+from .serializers import PasswordSerializer
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 import io
@@ -18,6 +19,28 @@ from reportlab.lib.pagesizes import mm, inch
 from reportlab.platypus import PageBreak
 from django.conf import settings
 
+
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        user = get_object_or_404(User, username=request.user.username)
+        serializer = UserSerializer(instance=user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def set_password(self, request):
+        user = get_object_or_404(User, username=request.user.username)
+        serializer = PasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if serializer.validated_data.get('current_password') == user.password:
+            #user.update(password=serializer.validated_data.get('new_password'))
+            user.password = serializer.validated_data.get('new_password')
+            user.save()
+            return Response(status=status.HTTP_200_OK)
+        return Response('wrong password', status=status.HTTP_401_UNAUTHORIZED)
 
 
 class RecipeViewSet(ModelViewSet):
@@ -47,19 +70,15 @@ class RecipeViewSet(ModelViewSet):
     )
     def download_shopping_cart(self, request):
         user = get_object_or_404(User, username=request.user)
-        print('user= ', user.username, '\n')
         cart = Recipe.objects.filter(shopping_cart__user=user)
         shopping_list = {}
         for recipe in cart:
             ingredients = recipe.ingredients.all()
-            print('ingredients= ', ingredients, '\n')
             for ingredient in ingredients:
                 ingredient_for_recipe = ingredient.for_recipe.get(recipe=recipe)
                 shopping_list.setdefault(ingredient.name, [0, ''])
                 shopping_list[ingredient.name][0] += ingredient_for_recipe.amount
                 shopping_list[ingredient.name][1] = ingredient.measurement_unit
-                print('ingredient= ', ingredient, 'amount=', ingredient_for_recipe.amount, '_', ingredient.measurement_unit)
-            print('list=', shopping_list, '\n')
 
         FONT_SIZE = 12
         A4_WIDTH = 210 * mm
@@ -83,17 +102,14 @@ class RecipeViewSet(ModelViewSet):
                 pdf_object.setFont('Arial', FONT_SIZE)
                 pdf_object.setFillColorRGB(0.2, 0.2, 0.7)
                 y = A4_HEIGHT - 10
-        pdf_object.drawString(x, y, '_____________________________________________')
+        pdf_object.drawString(x, y, '_________________________________________')
         pdf_object.showPage()
         pdf_object.save()
         print(pdf_object)
         buffer.seek(0)
-        return FileResponse(buffer, as_attachment=True, filename='shopping list.pdf')
-
-
-        #serializer = self.serializer_class(instance=cart[0])
-        #return Response(serializer.data, status=status.HTTP_200_OK)
-
+        return FileResponse(
+            buffer, as_attachment=True, filename='shopping list.pdf'
+        )
 
 
 class TagViewSet(ModelViewSet):
