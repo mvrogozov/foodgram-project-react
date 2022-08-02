@@ -5,6 +5,15 @@ from recipes.models import Ingredient, Recipe, Tag, Ingredient_for_recipe, Follo
 from django.core.files.base import ContentFile
 from users.models import User
 from .utils import is_me
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['email'] = user.email
+        return token
 
 
 class PasswordSerializer(serializers.BaseSerializer):
@@ -56,6 +65,31 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         return is_me(value)
+
+
+class UserPostSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'password'
+        )
+    
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
 
 
 class Base64ImageField(serializers.Field):

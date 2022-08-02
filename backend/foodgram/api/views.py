@@ -9,7 +9,7 @@ from rest_framework.viewsets import ModelViewSet
 from users.models import User
 from recipes.models import Tag, Recipe, Ingredient, ShoppingCart
 from .serializers import TagSerializer, RecipeSerializer, IngredientSerializer, UserSerializer
-from .serializers import PasswordSerializer
+from .serializers import PasswordSerializer, UserPostSerializer
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 import io
@@ -18,11 +18,24 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import mm, inch
 from reportlab.platypus import PageBreak
 from django.conf import settings
+from .serializers import MyTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_serializer_class(self):
+        print('\n\n ququ ', self.request.method)
+        if self.request.method == 'POST':
+            print('\n yeah')
+            return UserPostSerializer
+        return UserSerializer
 
     @action(detail=False, methods=['get'])
     def me(self, request):

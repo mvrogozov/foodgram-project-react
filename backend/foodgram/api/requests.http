@@ -20,7 +20,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://127.0.0.1:8000/auth/users/
+GET http://127.0.0.1:8000/auth/users/me/
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjYwMDQxMDg1LCJqdGkiOiI1NjgxZWM0NDVjYWU0ZjJlOGE2MWY1OTBkMzI2NWE4MiIsInVzZXJfaWQiOjEyfQ.PrID6Gw2HkAesrHEr1ZmWVkaQT31wYTLlYNTbnuy0r0
 ###
 POST http://127.0.0.1:8000/auth/users/
@@ -109,17 +109,17 @@ Content-Type: application/json
     "color": "fefefd"
 }
 ###
-GET http://127.0.0.1:8000/api/users/13/
+GET http://127.0.0.1:8000/api/users/
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjYwMDQxMDg1LCJqdGkiOiI1NjgxZWM0NDVjYWU0ZjJlOGE2MWY1OTBkMzI2NWE4MiIsInVzZXJfaWQiOjEyfQ.PrID6Gw2HkAesrHEr1ZmWVkaQT31wYTLlYNTbnuy0r0
 ###
 POST http://127.0.0.1:8000/api/users/
 Content-Type: application/json
 
 {
-  "email": "newuser2@yandex.ru",
-  "username": "newuser2",
+  "email": "casched@y.tu",
+  "username": "cascheduser",
   "first_name": "New name",
-  "last_name": "Пупкин",
+  "last_name": "tokenuserln",
   "password": "QwertН123"
 }
 ###
@@ -128,7 +128,32 @@ Content-Type: application/json
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjYwMDQxMDg1LCJqdGkiOiI1NjgxZWM0NDVjYWU0ZjJlOGE2MWY1OTBkMzI2NWE4MiIsInVzZXJfaWQiOjEyfQ.PrID6Gw2HkAesrHEr1ZmWVkaQT31wYTLlYNTbnuy0r0
 
 {
-  "current_password": "qwas",
-  "new_password": "QwertН123"
+  "current_password": "QwertН123",
+  "new_password": "Qwertyyyy"
 }
+###
+GET http://127.0.0.1:8000/api/users/
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjYwMDQxMDg1LCJqdGkiOiI1NjgxZWM0NDVjYWU0ZjJlOGE2MWY1OTBkMzI2NWE4MiIsInVzZXJfaWQiOjEyfQ.PrID6Gw2HkAesrHEr1ZmWVkaQT31wYTLlYNTbnuy0r0
+
+###
+"username": "cascheduser",
+###
+POST http://127.0.0.1:8000/api/auth/token/login/
+Content-Type: application/json
+
+{
+    
+    "email": "casched@y.tu",
+    "password": "QwertН123"
+}
+###
+  "email": "casched@y.tu",
+  "username": "cascheduser",
+  "first_name": "New name",
+  "last_name": "tokenuserln",
+  "password": "QwertН123"
+
+"auth_token": "572ebd2fd3be2d771aeef690b6a456d6f59fb617"
+
+
 ###
