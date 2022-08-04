@@ -1,4 +1,5 @@
 import os
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -20,31 +21,35 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import mm, inch
 from reportlab.platypus import PageBreak
 from django.conf import settings
-from .serializers import MyTokenObtainPairSerializer
+#from .serializers import MyTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 
-class MyTokenObtainPairView(TokenObtainPairView):
+'''class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
-
+'''
 
 class SubscriptionViewSet(ModelViewSet):
-    queryset = User.objects.all()
+    #queryset = User.objects.all()
     serializer_class = SubscriptionSerializer
+
+
+    def get_queryset(self):
+        queryset = Follow.objects.filter(user=self.request.user).select_related('author')
+        return queryset
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
-            return UserPostSerializer
+            return SubscriptionSerializer
         print('\n get')
         return SubscriptionSerializer
+    
+    def perform_create(self, serializer):
+        author = get_object_or_404(User, id=self.kwargs.get('user_id'))
+        serializer.save(author=author, user=self.request.user)
 
-    @action(detail=False, methods=['get'])
-    def subscriptions(self, request):
-        print('\n in get')
-        user = get_object_or_404(User, username=request.user.username)
-        queryset = user.following.all()
-        print('\n queryset = ', queryset)
-        return Response('okk')
+    #def perform_destroy(self, instance):
+    #    return super().perform_destroy(instance) 
 
     @action(detail=True, methods=['post', 'delete'])
     def subscriptions(self, request, pk=None):
@@ -67,6 +72,28 @@ class UserViewSet(ModelViewSet):
         if self.request.method == 'POST':
             return UserPostSerializer
         return UserSerializer
+
+    @action(detail=False, methods=['get'])
+    def subscriptions(self, request):
+        print('\n in get')
+        user = get_object_or_404(User, username=request.user.username)
+        queryset = user.follower.all().annotate(recipes_count=Count('author__recipes'))
+        #queryset = user.follower.annotate(recipes_count=Count('author__recipes'))
+        print('\n queryset= ', queryset)
+        serializer = SubscriptionSerializer(many=True, instance=queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=['post', 'delete'])
+    def subscribe(self, request, pk=None):
+        print('\n here')
+        user = get_object_or_404(User, username=request.user.username)
+        author = get_object_or_404(User, pk=pk)
+        following, _ = Follow.objects.get_or_create(user=user, author=author)
+        if request.method == 'POST':
+            return Response('Подписка выполнена', status=status.HTTP_201_CREATED)
+        following.delete()
+        return Response('Отписка выполнена', status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'])
     def me(self, request):
@@ -183,3 +210,24 @@ class TagViewSet(ReadOnlyModelViewSet):
 class IngredientViewSet(ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+
+
+
+    #######################
+'''
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = (
+        Title.objects.all().annotate(
+            rating=Avg('reviews__score')
+        ).order_by('name')
+    )
+    filterset_class = TitleFilter
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+
+    def get_serializer_class(self):
+        if self.action in ['post', 'create', 'partial_update']:
+            return TitleSerializerEdit
+        return TitleSerializerSafe
+'''
+###########################       

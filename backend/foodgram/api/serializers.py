@@ -9,12 +9,12 @@ from .utils import is_me, serializer_decode_image
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+'''class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
         token['email'] = user.email
-        return token
+        return token'''
 
 
 class PasswordSerializer(serializers.BaseSerializer):
@@ -92,6 +92,8 @@ class UserPostSerializer(serializers.ModelSerializer):
         return user
 
 
+
+
 class Base64ImageField(serializers.Field):
 
     def to_representation(self, value):
@@ -154,7 +156,7 @@ class ForRecipeSerializer(serializers.Field):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    image = Base64ImageField()
+    image = Base64ImageField()     # WATCH HERE
     ingredients = ForRecipeSerializer(
         source='ingredient'
     )
@@ -262,11 +264,10 @@ class ShortRecipeSerializer(RecipeSerializer):
         )
 
 
-class SubscriptionSerializer(UserSerializer):
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-    class Meta:
-        model = User
+class UserFollowSerializer(UserSerializer):
+    recipes = ShortRecipeSerializer(many=True)
+
+    class Meta(UserSerializer.Meta):
         fields = (
             'email',
             'id',
@@ -274,12 +275,29 @@ class SubscriptionSerializer(UserSerializer):
             'first_name',
             'last_name',
             'is_subscribed',
-            'recipes',
+            'recipes'
+        )
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    recipes_count = serializers.IntegerField()
+    author = UserFollowSerializer()
+
+    class Meta:
+        model = Follow
+        fields = (
+            'user',
+            'author',
             'recipes_count'
         )
-    
-    def get_recipes(self, obj):
-        return 'reccipe'
 
-    def get_recipes_count(self, obj):
-        return 100500
+    '''def create(self, validated_data):
+        print('\n in create')
+        user = self.context.get('request').user
+        author = get_object_or_404(User, pk=)
+        print('self= ', self.context.get('request').user)
+        print('valdata ', validated_data)
+        return super().create(validated_data)'''
+
+    def get_recipes(self, obj):
+        return 'qqquuu'
