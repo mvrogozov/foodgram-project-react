@@ -7,6 +7,7 @@ app_name = 'recipes'
 
 urlpatterns = [
     path('', IndexView.as_view(), name='recipes_index'),
+    
     path(
         'recipes/<int:recipe_id>/',
         RecipeDetailView.as_view(),

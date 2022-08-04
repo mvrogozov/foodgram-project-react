@@ -1,10 +1,11 @@
 import base64
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from recipes.models import Ingredient, Recipe, Tag, Ingredient_for_recipe, Follow
+from recipes.models import Ingredient, Recipe, Tag, Ingredient_for_recipe
+from recipes.models import Follow, Favorite, ShoppingCart
 from django.core.files.base import ContentFile
 from users.models import User
-from .utils import is_me
+from .utils import is_me, serializer_decode_image
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
@@ -78,7 +79,7 @@ class UserPostSerializer(serializers.ModelSerializer):
             'last_name',
             'password'
         )
-    
+
     def create(self, validated_data):
         user = User(
             email=validated_data['email'],
@@ -91,23 +92,21 @@ class UserPostSerializer(serializers.ModelSerializer):
         return user
 
 
-
 class Base64ImageField(serializers.Field):
 
     def to_representation(self, value):
         return str(value)
 
     def to_internal_value(self, data):
-        try:
-            # convert 64 to image
-
+        '''try:
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
         except ValueError:
-            raise serializers.ValidationError('wrong image')
-        return data
+            raise serializers.ValidationError('wrong image')'''
+        print('\n in b64if data= ', data)
+        print('\n in b64if after decode data= ', serializer_decode_image(data))
+        return serializer_decode_image(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -159,6 +158,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = ForRecipeSerializer(
         source='ingredient'
     )
+    author = UserSerializer()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -171,19 +173,50 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time',
             'image',
             'tags',
+            'is_favorited',
+            'is_in_shopping_cart'
         ]
-        validators = [
-            serializers.UniqueTogetherValidator(
-                queryset=model.objects.all(),
-                fields=('author', 'name'),
-                message=('У Вас есть рецепт с таким именем')
+
+    def get_is_favorited(self, obj):
+        if self.context:
+            user = self.context.get('request').user
+            return Favorite.objects.filter(user=user.id, recipe=obj).exists()
+        return False
+
+    def get_is_in_shopping_cart(self, obj):
+        if self.context:
+            user = self.context.get('request').user
+            return ShoppingCart.objects.filter(
+                user=user.id, recipe=obj
+                ).exists()
+        return False
+
+
+class RecipePostSerializer(RecipeSerializer):
+    class Meta:
+        model = Recipe
+        fields = (
+            'name',
+            'text',
+            'ingredients',
+            'cooking_time',
+            'image',
+            'tags'
+        )
+
+    def validate(self, attrs):
+        user = self.context.get('request').user
+        if Recipe.objects.filter(name=attrs['name'], author=user):
+            raise serializers.ValidationError(
+                'У Вас есть рецепт с таким именем'
             )
-        ]
+        return attrs
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredient')
         tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
+        author = self.context.get('request').user
+        recipe = Recipe.objects.create(**validated_data, author=author)
         for ingredient in ingredients:
             ingredient_instance = get_object_or_404(
                 Ingredient,
@@ -214,4 +247,39 @@ class RecipeSerializer(serializers.ModelSerializer):
                 amount=ingredient.get('amount')
             )
         instance.tags.set(tags)
+        instance.refresh_from_db()
         return instance
+
+
+class ShortRecipeSerializer(RecipeSerializer):
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
+
+
+class SubscriptionSerializer(UserSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
+    
+    def get_recipes(self, obj):
+        return 'reccipe'
+
+    def get_recipes_count(self, obj):
+        return 100500

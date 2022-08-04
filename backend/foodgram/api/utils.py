@@ -1,6 +1,18 @@
 import requests
 from rest_framework import serializers
+from django.core.files.base import ContentFile
 import json
+import base64
+
+
+def serializer_decode_image(data):
+    try:
+        format, imgstr = data.split(';base64,')
+        ext = format.split('/')[-1]
+        data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+    except ValueError:
+        raise serializers.ValidationError('wrong image')
+    return data
 
 
 def fill_db(path_to_file):
