@@ -30,10 +30,13 @@ django==3.2.14
     # via
     #   -r requirements.in
     #   django-debug-toolbar
+    #   django-filter
     #   djangohexadecimalfield
     #   djangorestframework
     #   djangorestframework-simplejwt
 django-debug-toolbar==3.5.0
+    # via -r requirements.in
+django-filter==22.1
     # via -r requirements.in
 django-templated-mail==1.1.1
     # via djoser

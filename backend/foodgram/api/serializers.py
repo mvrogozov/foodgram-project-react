@@ -7,6 +7,7 @@ from django.core.files.base import ContentFile
 from users.models import User
 from .utils import is_me, serializer_decode_image
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.db import transaction
 
 
 '''class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -80,6 +81,7 @@ class UserPostSerializer(serializers.ModelSerializer):
             'password'
         )
 
+    @transaction.atomic()
     def create(self, validated_data):
         user = User(
             email=validated_data['email'],
@@ -94,21 +96,71 @@ class UserPostSerializer(serializers.ModelSerializer):
 
 
 
-class Base64ImageField(serializers.Field):
+class Base641ImageField(serializers.Field):
 
     def to_representation(self, value):
         return str(value)
 
     def to_internal_value(self, data):
-        '''try:
+        try:
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
         except ValueError:
-            raise serializers.ValidationError('wrong image')'''
-        print('\n in b64if data= ', data)
-        print('\n in b64if after decode data= ', serializer_decode_image(data))
-        return serializer_decode_image(data)
+            raise serializers.ValidationError('wrong image')
+        return data
+
+
+
+class Base64ImageField(serializers.ImageField):
+    """
+    A Django REST framework field for handling image-uploads through raw post data.
+    It uses base64 for encoding and decoding the contents of the file.
+
+    Heavily based on
+    https://github.com/tomchristie/django-rest-framework/pull/1268
+
+    Updated for Django REST framework 3.
+    """
+
+    def to_internal_value(self, data):
+        from django.core.files.base import ContentFile
+        import base64
+        import six
+        import uuid
+
+        # Check if this is a base64 string
+        if isinstance(data, six.string_types):
+            # Check if the base64 string is in the "data:" format
+            if 'data:' in data and ';base64,' in data:
+                # Break out the header from the base64 content
+                header, data = data.split(';base64,')
+
+            # Try to decode the file. Return validation error if it fails.
+            try:
+                decoded_file = base64.b64decode(data)
+            except TypeError:
+                self.fail('invalid_image')
+
+            # Generate file name:
+            file_name = str(uuid.uuid4())[:12] # 12 characters are more than enough.
+            # Get the file name extension:
+            file_extension = self.get_file_extension(file_name, decoded_file)
+
+            complete_file_name = "%s.%s" % (file_name, file_extension, )
+
+            data = ContentFile(decoded_file, name=complete_file_name)
+
+        return super(Base64ImageField, self).to_internal_value(data)
+
+    def get_file_extension(self, file_name, decoded_file):
+        import imghdr
+
+        extension = imghdr.what(file_name, decoded_file)
+        extension = "jpg" if extension == "jpeg" else extension
+
+        return extension
+
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -156,11 +208,12 @@ class ForRecipeSerializer(serializers.Field):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    image = Base64ImageField()     # WATCH HERE
+    image = Base64ImageField(use_url=True)
     ingredients = ForRecipeSerializer(
         source='ingredient'
     )
     author = UserSerializer()
+    tags = TagSerializer(many=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
@@ -214,6 +267,7 @@ class RecipePostSerializer(RecipeSerializer):
             )
         return attrs
 
+    @transaction.atomic()
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredient')
         tags = validated_data.pop('tags')
@@ -232,11 +286,15 @@ class RecipePostSerializer(RecipeSerializer):
         recipe.tags.set(tags)
         return recipe
 
+    @transaction.atomic()
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredient')
         tags = validated_data.pop('tags')
+        image = validated_data.pop('image')
         recipe = Recipe.objects.filter(pk=instance.id)
         recipe.update(**validated_data)
+        instance.image = image
+        instance.save()
         Ingredient_for_recipe.objects.filter(recipe=instance).delete()
         for ingredient in ingredients:
             ingredient_instance = get_object_or_404(
@@ -286,18 +344,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = (
-            'user',
             'author',
             'recipes_count'
         )
-
-    '''def create(self, validated_data):
-        print('\n in create')
-        user = self.context.get('request').user
-        author = get_object_or_404(User, pk=)
-        print('self= ', self.context.get('request').user)
-        print('valdata ', validated_data)
-        return super().create(validated_data)'''
-
-    def get_recipes(self, obj):
-        return 'qqquuu'

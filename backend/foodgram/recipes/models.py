@@ -13,6 +13,9 @@ class Ingredient(models.Model):
         max_length=32
     )
 
+    class Meta:
+        ordering = ('name',)
+
     def __str__(self):
         return self.name
 
@@ -20,10 +23,13 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     tag_name = models.CharField(
         'Имя тега',
-        max_length=32
+        max_length=32,
+        unique=True
     )
     color = models.CharField(
-        max_length=9
+        'Цвет',
+        max_length=9,
+        unique=True
     )
     slug = models.SlugField(
         'slug',
