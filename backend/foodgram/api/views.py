@@ -1,24 +1,25 @@
 from django.db.models import Count
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, filters
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .api_permissions import IsAuthorOrReadOnly
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import User
-from recipes.models import Favorite, Follow, Tag, Recipe, Ingredient, ShoppingCart
-from .serializers import SubscriptionSerializer, TagSerializer, RecipeSerializer, IngredientSerializer
+from recipes.models import Favorite, Follow, Tag, Recipe, Ingredient
+from recipes.models import ShoppingCart
+from .serializers import SubscriptionSerializer, TagSerializer
 from .serializers import PasswordSerializer, UserPostSerializer
 from .serializers import ShortRecipeSerializer, UserSerializer
-from .serializers import RecipePostSerializer
+from .serializers import RecipePostSerializer, IngredientSerializer
+from .serializers import RecipeSerializer
 from django.http import FileResponse
 from .mixins import mymix
 
 from .utils import create_pdf
-from django.conf import settings
 
 
 class SubscriptionViewSet(ModelViewSet):
@@ -30,11 +31,6 @@ class SubscriptionViewSet(ModelViewSet):
             ).select_related('author')
         return queryset
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return SubscriptionSerializer
-        return SubscriptionSerializer
-    
     def perform_create(self, serializer):
         author = get_object_or_404(User, id=self.kwargs.get('user_id'))
         serializer.save(author=author, user=self.request.user)
@@ -99,7 +95,9 @@ class UserViewSet(ModelViewSet):
         user = get_object_or_404(User, username=request.user.username)
         serializer = PasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if user.check_password(serializer.validated_data.get('current_password')):
+        if user.check_password(
+            serializer.validated_data.get('current_password')
+        ):
             user.set_password(serializer.validated_data.get('new_password'))
             user.save()
             return Response(status=status.HTTP_200_OK)
@@ -107,8 +105,6 @@ class UserViewSet(ModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet, mymix):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (
         DjangoFilterBackend,
@@ -120,8 +116,13 @@ class RecipeViewSet(ModelViewSet, mymix):
     ordering_fields = ('name', 'cooking_time')
     ordering = ('name',)
 
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        return queryset
+
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
+            print('get post ser')
             return RecipePostSerializer
         return RecipeSerializer
 
@@ -178,9 +179,13 @@ class RecipeViewSet(ModelViewSet, mymix):
         for recipe in cart:
             ingredients = recipe.ingredients.all()
             for ingredient in ingredients:
-                ingredient_for_recipe = ingredient.for_recipe.get(recipe=recipe)
+                ingredient_for_recipe = ingredient.for_recipe.get(
+                    recipe=recipe
+                )
                 shopping_list.setdefault(ingredient.name, [0, ''])
-                shopping_list[ingredient.name][0] += ingredient_for_recipe.amount
+                shopping_list[ingredient.name][0] += (
+                    ingredient_for_recipe.amount
+                )
                 shopping_list[ingredient.name][1] = ingredient.measurement_unit
 
         buffer = create_pdf(shopping_list)
@@ -192,7 +197,7 @@ class RecipeViewSet(ModelViewSet, mymix):
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    
+
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()

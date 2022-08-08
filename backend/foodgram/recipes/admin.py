@@ -24,6 +24,7 @@ class IngredientAdmin(admin.ModelAdmin):
     )
     list_filter = ('name',)
 
+
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag)
 admin.site.register(Ingredient, IngredientAdmin)

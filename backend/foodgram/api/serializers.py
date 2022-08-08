@@ -5,21 +5,12 @@ from recipes.models import Ingredient, Recipe, Tag, Ingredient_for_recipe
 from recipes.models import Follow, Favorite, ShoppingCart
 from django.core.files.base import ContentFile
 from users.models import User
-from .utils import is_me, serializer_decode_image
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .utils import is_me
 from django.db import transaction
 
 
-'''class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['email'] = user.email
-        return token'''
-
-
 class PasswordSerializer(serializers.BaseSerializer):
-    
+
     def to_representation(self, instance):
         return super().to_representation(instance)
 
@@ -94,38 +85,8 @@ class UserPostSerializer(serializers.ModelSerializer):
         return user
 
 
-
-
-class Base641ImageField(serializers.Field):
-
-    def to_representation(self, value):
-        return str(value)
-
-    def to_internal_value(self, data):
-        try:
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        except ValueError:
-            raise serializers.ValidationError('wrong image')
-        return data
-
-
-
 class Base64ImageField(serializers.ImageField):
-    """
-    A Django REST framework field for handling image-uploads through raw post data.
-    It uses base64 for encoding and decoding the contents of the file.
-
-    Heavily based on
-    https://github.com/tomchristie/django-rest-framework/pull/1268
-
-    Updated for Django REST framework 3.
-    """
-
     def to_internal_value(self, data):
-        from django.core.files.base import ContentFile
-        import base64
         import six
         import uuid
 
@@ -143,7 +104,7 @@ class Base64ImageField(serializers.ImageField):
                 self.fail('invalid_image')
 
             # Generate file name:
-            file_name = str(uuid.uuid4())[:12] # 12 characters are more than enough.
+            file_name = str(uuid.uuid4())[:12]
             # Get the file name extension:
             file_extension = self.get_file_extension(file_name, decoded_file)
 
@@ -160,7 +121,6 @@ class Base64ImageField(serializers.ImageField):
         extension = "jpg" if extension == "jpeg" else extension
 
         return extension
-
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -248,6 +208,11 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipePostSerializer(RecipeSerializer):
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
+
     class Meta:
         model = Recipe
         fields = (
