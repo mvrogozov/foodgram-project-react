@@ -4,7 +4,14 @@ from rest_framework import permissions
 class IsAuthorOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, obj):
-        return not request.user.is_anonymous
+        return (
+            request.method in permissions.SAFE_METHODS
+            or not request.user.is_anonymous
+        )
 
     def has_object_permission(self, request, view, obj):
-        return obj.author == request.user
+        if request.user.is_anonymous:
+            return False
+        if request.method in ['PATCH', 'DELETE']:
+            return obj.author == request.user
+        return True

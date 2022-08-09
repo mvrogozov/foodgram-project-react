@@ -1,20 +1,22 @@
-import base64
-from django.shortcuts import get_object_or_404
-from rest_framework import serializers
-from recipes.models import Ingredient, Recipe, Tag, Ingredient_for_recipe
-from recipes.models import Follow, Favorite, ShoppingCart
-from django.core.files.base import ContentFile
-from users.models import User
-from .utils import is_me
 from django.db import transaction
+from django.shortcuts import get_object_or_404
+from recipes.models import (Favorite, Follow, Ingredient,
+                            IngredientForRecipe, Recipe, ShoppingCart, Tag)
+from rest_framework import serializers
+from users.models import User
+
+from .utils import is_me
+from .fields import Base64ImageField
 
 
 class PasswordSerializer(serializers.BaseSerializer):
-
-    def to_representation(self, instance):
-        return super().to_representation(instance)
-
     def to_internal_value(self, data):
+        return {
+            'current_password': data['current_password'],
+            'new_password': data['new_password']
+        }
+
+    def validate(self, data):
         current_password = data.get('current_password')
         new_password = data.get('new_password')
         if not current_password:
@@ -29,10 +31,7 @@ class PasswordSerializer(serializers.BaseSerializer):
             raise serializers.ValidationError(
                 'Длина пароля должна быть не меньше 8 символов'
             )
-        return {
-            'current_password': current_password,
-            'new_password': new_password
-        }
+        return data    
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -56,8 +55,6 @@ class UserSerializer(serializers.ModelSerializer):
             return Follow.objects.filter(user=user.id, author=obj).exists()
         return False
 
-    def validate_username(self, value):
-        return is_me(value)
 
 
 class UserPostSerializer(serializers.ModelSerializer):
@@ -84,44 +81,8 @@ class UserPostSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        import six
-        import uuid
-
-        # Check if this is a base64 string
-        if isinstance(data, six.string_types):
-            # Check if the base64 string is in the "data:" format
-            if 'data:' in data and ';base64,' in data:
-                # Break out the header from the base64 content
-                header, data = data.split(';base64,')
-
-            # Try to decode the file. Return validation error if it fails.
-            try:
-                decoded_file = base64.b64decode(data)
-            except TypeError:
-                self.fail('invalid_image')
-
-            # Generate file name:
-            file_name = str(uuid.uuid4())[:12]
-            # Get the file name extension:
-            file_extension = self.get_file_extension(file_name, decoded_file)
-
-            complete_file_name = "%s.%s" % (file_name, file_extension, )
-
-            data = ContentFile(decoded_file, name=complete_file_name)
-
-        return super(Base64ImageField, self).to_internal_value(data)
-
-    def get_file_extension(self, file_name, decoded_file):
-        import imghdr
-
-        extension = imghdr.what(file_name, decoded_file)
-        extension = "jpg" if extension == "jpeg" else extension
-
-        return extension
-
+    def validate_username(self, value):
+        return is_me(value)
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -143,7 +104,7 @@ class Ingredient_for_recipeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient_name')
 
     class Meta:
-        model = Ingredient_for_recipe
+        model = IngredientForRecipe
         fields = ('id', 'amount')
 
 
@@ -224,6 +185,26 @@ class RecipePostSerializer(RecipeSerializer):
             'tags'
         )
 
+    def validate_ingredients(self, value):
+        collection = []
+        for item in value:
+            if item['ingredient_name'] in collection:
+                raise serializers.ValidationError(
+                    'Переданы дублированные ингредиенты'
+                )
+            collection.append(item['ingredient_name'])
+        return value
+
+    def validate_tags(self, value):
+        collection = []
+        for item in value:
+            if item in collection:
+                raise serializers.ValidationError(
+                    'Переданы дублированные тэги'
+                )
+            collection.append(item)
+        return value
+
     def validate(self, attrs):
         user = self.context.get('request').user
         if Recipe.objects.filter(name=attrs['name'], author=user):
@@ -232,22 +213,28 @@ class RecipePostSerializer(RecipeSerializer):
             )
         return attrs
 
+    def _collect_ingredients(self, ingredients, recipe):
+        ingredients_to_add = []
+        for ingredient in ingredients:
+            ingredient_instance = get_object_or_404(
+                Ingredient,
+                pk=ingredient.get('ingredient_name')
+            )
+            ingredients_to_add.append(IngredientForRecipe(
+                ingredient_name=ingredient_instance,
+                recipe=recipe,
+                amount=ingredient.get('amount')
+            ))
+        return ingredients_to_add
+
     @transaction.atomic()
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredient')
         tags = validated_data.pop('tags')
         author = self.context.get('request').user
         recipe = Recipe.objects.create(**validated_data, author=author)
-        for ingredient in ingredients:
-            ingredient_instance = get_object_or_404(
-                Ingredient,
-                pk=ingredient.get('ingredient_name')
-            )
-            Ingredient_for_recipe.objects.get_or_create(
-                ingredient_name=ingredient_instance,
-                recipe=recipe,
-                amount=ingredient.get('amount')
-            )
+        ingredients_to_add = self._collect_ingredients(ingredients, recipe)
+        IngredientForRecipe.objects.bulk_create(ingredients_to_add)
         recipe.tags.set(tags)
         return recipe
 
@@ -255,24 +242,15 @@ class RecipePostSerializer(RecipeSerializer):
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredient')
         tags = validated_data.pop('tags')
-        image = validated_data.pop('image')
-        recipe = Recipe.objects.filter(pk=instance.id)
-        recipe.update(**validated_data)
-        instance.image = image
+        instance.name = validated_data.get('name')
+        instance.text = validated_data.get('text')
+        instance.cooking_time = validated_data.get('cooking_time')
+        instance.image = validated_data.get('image')
         instance.save()
-        Ingredient_for_recipe.objects.filter(recipe=instance).delete()
-        for ingredient in ingredients:
-            ingredient_instance = get_object_or_404(
-                Ingredient,
-                pk=ingredient.get('ingredient_name')
-            )
-            Ingredient_for_recipe.objects.get_or_create(
-                ingredient_name=ingredient_instance,
-                recipe=instance,
-                amount=ingredient.get('amount')
-            )
+        IngredientForRecipe.objects.filter(recipe=instance).delete()
+        ingredients_to_add = self._collect_ingredients(ingredients, instance)
+        IngredientForRecipe.objects.bulk_create(ingredients_to_add)
         instance.tags.set(tags)
-        instance.refresh_from_db()
         return instance
 
 

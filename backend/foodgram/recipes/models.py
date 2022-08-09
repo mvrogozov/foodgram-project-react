@@ -1,6 +1,7 @@
-from django.db import models
-from users.models import User
 from core.models import CreatedModel
+from django.db import models
+from django.core.validators import MinValueValidator
+from users.models import User
 
 
 class Ingredient(models.Model):
@@ -67,7 +68,7 @@ class Recipe(CreatedModel):
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='Ingredient_for_recipe',
+        through='IngredientForRecipe',
         related_name='recipes',
         verbose_name='Список ингредиентов'
     )
@@ -77,6 +78,7 @@ class Recipe(CreatedModel):
     )
     cooking_time = models.IntegerField(
         'Время приготовления',
+        validators=(MinValueValidator(1),)
     )
 
     class Meta:
@@ -92,7 +94,7 @@ class Recipe(CreatedModel):
         return self.name
 
 
-class Ingredient_for_recipe(models.Model):
+class IngredientForRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         related_name='ingredient',
@@ -105,7 +107,8 @@ class Ingredient_for_recipe(models.Model):
     )
     amount = models.FloatField(
         'Количество',
-        max_length=10
+        max_length=10,
+        validators=(MinValueValidator(1),)
     )
 
     class Meta:

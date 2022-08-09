@@ -1,15 +1,16 @@
-from rest_framework import serializers
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.pagesizes import mm
 import io
 import os
-from reportlab.pdfbase import pdfmetrics
+
 from django.conf import settings
+from reportlab.lib.pagesizes import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+from rest_framework import serializers
 
 
 def is_me(value):
-    if value == 'me':
+    if value.lower() == 'me':
         raise serializers.ValidationError(
             'Нельзя использовать зарезервированное имя "me"'
         )

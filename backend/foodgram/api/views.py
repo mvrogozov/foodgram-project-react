@@ -1,24 +1,23 @@
-from django.db.models import Count
+from django.db.models import Count, Sum
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.response import Response
+from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe, Recipe, ShoppingCart,
+                            Tag)
+from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework import status, filters
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .api_permissions import IsAuthorOrReadOnly
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import User
-from recipes.models import Favorite, Follow, Tag, Recipe, Ingredient
-from recipes.models import ShoppingCart
-from .serializers import SubscriptionSerializer, TagSerializer
-from .serializers import PasswordSerializer, UserPostSerializer
-from .serializers import ShortRecipeSerializer, UserSerializer
-from .serializers import RecipePostSerializer, IngredientSerializer
-from .serializers import RecipeSerializer
-from django.http import FileResponse
-from .mixins import mymix
 
+from .api_permissions import IsAuthorOrReadOnly
+from .mixins import CreateDeleteRecordMixin
+from .serializers import (IngredientSerializer, PasswordSerializer,
+                          RecipePostSerializer, RecipeSerializer,
+                          ShortRecipeSerializer, SubscriptionSerializer,
+                          TagSerializer, UserPostSerializer, UserSerializer)
 from .utils import create_pdf
 
 
@@ -64,12 +63,14 @@ class UserViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
         )
     def subscribe(self, request, pk=None):
-        user = get_object_or_404(User, username=request.user.username)
         author = get_object_or_404(User, pk=pk)
-        following, _ = Follow.objects.get_or_create(user=user, author=author)
+        following, _ = Follow.objects.get_or_create(
+            user=request.user,
+            author=author
+        )
         if request.method == 'POST':
             following = Follow.objects.filter(
-                user=user, author=author
+                user=request.user, author=author
                 ).annotate(recipes_count=Count('author__recipes'))
             serializer = SubscriptionSerializer(instance=following, many=True)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -94,6 +95,7 @@ class UserViewSet(ModelViewSet):
     def set_password(self, request):
         user = get_object_or_404(User, username=request.user.username)
         serializer = PasswordSerializer(data=request.data)
+        serializer.validate(request.data)
         serializer.is_valid(raise_exception=True)
         if user.check_password(
             serializer.validated_data.get('current_password')
@@ -104,8 +106,9 @@ class UserViewSet(ModelViewSet):
         return Response('wrong password', status=status.HTTP_401_UNAUTHORIZED)
 
 
-class RecipeViewSet(ModelViewSet, mymix):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
+    queryset = Recipe.objects.all()
+    permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -116,20 +119,10 @@ class RecipeViewSet(ModelViewSet, mymix):
     ordering_fields = ('name', 'cooking_time')
     ordering = ('name',)
 
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        return queryset
-
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
-            print('get post ser')
             return RecipePostSerializer
         return RecipeSerializer
-
-    def get_permissions(self):
-        if self.request.method in ['PATCH', 'DELETE']:
-            self.permission_classes = [IsAuthorOrReadOnly, ]
-        return super(RecipeViewSet, self).get_permissions()
 
     @action(
         detail=True,
@@ -137,9 +130,8 @@ class RecipeViewSet(ModelViewSet, mymix):
         permission_classes=[IsAuthenticated]
         )
     def shopping_cart(self, request, pk=None):
-        return mymix.create_delete_record(
-            self,
-            request,
+        return self.create_delete_record(
+            request=request,
             pair_model=Recipe,
             user_model=User,
             through_model=ShoppingCart,
@@ -155,8 +147,7 @@ class RecipeViewSet(ModelViewSet, mymix):
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk=None):
-        return mymix.create_delete_record(
-            self,
+        return self.create_delete_record(
             request,
             pair_model=Recipe,
             user_model=User,
@@ -173,21 +164,21 @@ class RecipeViewSet(ModelViewSet, mymix):
         permission_classes=[IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        user = get_object_or_404(User, username=request.user)
-        cart = Recipe.objects.filter(shopping_cart__user=user)
+        cart = Recipe.objects.filter(
+            shopping_cart__user=request.user
+        ).values_list('id', flat=True)
         shopping_list = {}
-        for recipe in cart:
-            ingredients = recipe.ingredients.all()
-            for ingredient in ingredients:
-                ingredient_for_recipe = ingredient.for_recipe.get(
-                    recipe=recipe
-                )
-                shopping_list.setdefault(ingredient.name, [0, ''])
-                shopping_list[ingredient.name][0] += (
-                    ingredient_for_recipe.amount
-                )
-                shopping_list[ingredient.name][1] = ingredient.measurement_unit
-
+        ingredients_for_all = IngredientForRecipe.objects.filter(
+            recipe__in=cart
+        ).annotate(total=Sum('amount', distinct=True)).order_by(
+            'ingredient_name'
+        )
+        for ingredient in ingredients_for_all:
+            shopping_list.setdefault(ingredient.ingredient_name, [0, ''])
+            shopping_list[ingredient.ingredient_name][0] = ingredient.total
+            shopping_list[ingredient.ingredient_name][1] = (
+                ingredient.ingredient_name.measurement_unit
+            )
         buffer = create_pdf(shopping_list)
         return FileResponse(
             buffer, as_attachment=True, filename='shopping list.pdf'

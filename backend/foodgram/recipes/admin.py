@@ -1,10 +1,11 @@
 from django.contrib import admin
-from .models import Recipe, Tag, Ingredient, Ingredient_for_recipe, Follow
-from .models import Favorite, ShoppingCart
+
+from .models import (Favorite, Follow, Ingredient, IngredientForRecipe,
+                     Recipe, ShoppingCart, Tag)
 
 
 class IngredientsInline(admin.TabularInline):
-    model = Ingredient_for_recipe
+    model = IngredientForRecipe
     extra = 1
 
 
@@ -28,5 +29,5 @@ class IngredientAdmin(admin.ModelAdmin):
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Tag)
 admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(Ingredient_for_recipe)
+admin.site.register(IngredientForRecipe)
 admin.site.register([Favorite, Follow, ShoppingCart])

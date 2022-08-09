@@ -2,6 +2,7 @@ import tempfile
 
 import pytest
 
+
 @pytest.fixture
 def tag():
     from recipes.models import Tag
