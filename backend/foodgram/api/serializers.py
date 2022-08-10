@@ -56,7 +56,6 @@ class UserSerializer(serializers.ModelSerializer):
         return False
 
 
-
 class UserPostSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -84,6 +83,7 @@ class UserPostSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         return is_me(value)
 
+
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -100,7 +100,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         )
 
 
-class Ingredient_for_recipeSerializer(serializers.ModelSerializer):
+class IngredientForRecipeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='ingredient_name')
 
     class Meta:
@@ -108,30 +108,49 @@ class Ingredient_for_recipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
 
-class ForRecipeSerializer(serializers.Field):
+class ForRecipeSerializer(serializers.ModelSerializer):
+    name = serializers.SlugRelatedField(
+        slug_field='name',
+        queryset=Ingredient.objects.all(),
+        source='ingredient_name',
+        required=False
+        )
+    measurement_unit = serializers.SlugRelatedField(
+        slug_field='measurement_unit',
+        queryset=Ingredient.objects.all(),
+        source='ingredient_name',
+        required=False
+    )
 
-    def to_representation(self, value):
-        ingredient_data = value.all()
-        out_data = []
-        for item in ingredient_data:
-            out_data.append({
-                'id': item.id,
-                'name': item.ingredient_name.name,
-                'measurement_unit': item.ingredient_name.measurement_unit,
-                'amount': item.amount
-            })
-        return out_data
+    class Meta:
+        model = IngredientForRecipe
+        fields = (
+            'id',
+            'name',
+            'measurement_unit',
+            'amount',
+        )
 
-    def to_internal_value(self, data):
-        serializer = Ingredient_for_recipeSerializer(data=data, many=True)
-        serializer.is_valid(raise_exception=True)
-        return serializer.validated_data
+
+class ForRecipePostSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all(),
+        source='ingredient_name',
+    )
+
+    class Meta:
+        model = IngredientForRecipe
+        fields = (
+            'id',
+            'amount'
+        )
 
 
 class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(use_url=True)
     ingredients = ForRecipeSerializer(
-        source='ingredient'
+        source='ingredient',
+        many=True
     )
     author = UserSerializer()
     tags = TagSerializer(many=True)
@@ -173,6 +192,10 @@ class RecipePostSerializer(RecipeSerializer):
         many=True,
         queryset=Tag.objects.all()
     )
+    ingredients = ForRecipePostSerializer(
+        many=True,
+        source='ingredient'
+    )
 
     class Meta:
         model = Recipe
@@ -187,6 +210,7 @@ class RecipePostSerializer(RecipeSerializer):
 
     def validate_ingredients(self, value):
         collection = []
+        print('\n\n validate_ingredients value', value)
         for item in value:
             if item['ingredient_name'] in collection:
                 raise serializers.ValidationError(
@@ -216,10 +240,7 @@ class RecipePostSerializer(RecipeSerializer):
     def _collect_ingredients(self, ingredients, recipe):
         ingredients_to_add = []
         for ingredient in ingredients:
-            ingredient_instance = get_object_or_404(
-                Ingredient,
-                pk=ingredient.get('ingredient_name')
-            )
+            ingredient_instance = ingredient.get('ingredient_name')
             ingredients_to_add.append(IngredientForRecipe(
                 ingredient_name=ingredient_instance,
                 recipe=recipe,
