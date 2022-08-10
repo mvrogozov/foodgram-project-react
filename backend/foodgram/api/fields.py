@@ -1,16 +1,12 @@
 import base64
-
+import uuid
+import six
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
-        import uuid
-
-        import six
-
-        # Check if this is a base64 string
         if isinstance(data, six.string_types):
             # Check if the base64 string is in the "data:" format
             if 'data:' in data and ';base64,' in data:

@@ -1,6 +1,6 @@
 from django.db import transaction
-from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
-                            Recipe, ShoppingCart, Tag)
+from recipes.models import Favorite, Follow, Ingredient, IngredientForRecipe
+from recipes.models import Recipe, ShoppingCart, Tag
 from rest_framework import serializers
 from users.models import User
 
@@ -134,7 +134,7 @@ class ForRecipeSerializer(serializers.ModelSerializer):
 class ForRecipePostSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
-        source='ingredient_name',
+        source='ingredient_name'
     )
 
     class Meta:
@@ -209,7 +209,6 @@ class RecipePostSerializer(RecipeSerializer):
 
     def validate_ingredients(self, value):
         collection = []
-        print('\n\n validate_ingredients value', value)
         for item in value:
             if item['ingredient_name'] in collection:
                 raise serializers.ValidationError(
@@ -230,6 +229,9 @@ class RecipePostSerializer(RecipeSerializer):
 
     def validate(self, attrs):
         user = self.context.get('request').user
+        pk = self.context['view'].kwargs.get('pk')
+        if Recipe.objects.get(pk=pk).name == attrs['name']:
+            return attrs
         if Recipe.objects.filter(name=attrs['name'], author=user):
             raise serializers.ValidationError(
                 'У Вас есть рецепт с таким именем'
@@ -245,6 +247,7 @@ class RecipePostSerializer(RecipeSerializer):
                 recipe=recipe,
                 amount=ingredient.get('amount')
             ))
+        IngredientForRecipe.objects.bulk_create(ingredients_to_add)
         return ingredients_to_add
 
     @transaction.atomic()
@@ -253,8 +256,7 @@ class RecipePostSerializer(RecipeSerializer):
         tags = validated_data.pop('tags')
         author = self.context.get('request').user
         recipe = Recipe.objects.create(**validated_data, author=author)
-        ingredients_to_add = self._collect_ingredients(ingredients, recipe)
-        IngredientForRecipe.objects.bulk_create(ingredients_to_add)
+        self._collect_ingredients(ingredients, recipe)
         recipe.tags.set(tags)
         return recipe
 
@@ -262,14 +264,9 @@ class RecipePostSerializer(RecipeSerializer):
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('ingredient')
         tags = validated_data.pop('tags')
-        instance.name = validated_data.get('name')
-        instance.text = validated_data.get('text')
-        instance.cooking_time = validated_data.get('cooking_time')
-        instance.image = validated_data.get('image')
-        instance.save()
+        super().update(instance, validated_data)
         IngredientForRecipe.objects.filter(recipe=instance).delete()
-        ingredients_to_add = self._collect_ingredients(ingredients, instance)
-        IngredientForRecipe.objects.bulk_create(ingredients_to_add)
+        self._collect_ingredients(ingredients, instance)
         instance.tags.set(tags)
         return instance
 

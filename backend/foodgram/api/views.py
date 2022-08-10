@@ -6,7 +6,7 @@ from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
                             Recipe, ShoppingCart, Tag)
 from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated,)
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from users.models import User
@@ -82,8 +82,7 @@ class UserViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def me(self, request):
-        user = get_object_or_404(User, username=request.user.username)
-        serializer = UserSerializer(instance=user)
+        serializer = UserSerializer(instance=request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
@@ -92,15 +91,16 @@ class UserViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def set_password(self, request):
-        user = get_object_or_404(User, username=request.user.username)
         serializer = PasswordSerializer(data=request.data)
         serializer.validate(request.data)
         serializer.is_valid(raise_exception=True)
-        if user.check_password(
+        if request.user.check_password(
             serializer.validated_data.get('current_password')
         ):
-            user.set_password(serializer.validated_data.get('new_password'))
-            user.save()
+            request.user.set_password(
+                serializer.validated_data.get('new_password')
+            )
+            request.user.save()
             return Response(status=status.HTTP_200_OK)
         return Response('wrong password', status=status.HTTP_401_UNAUTHORIZED)
 
