@@ -1,12 +1,11 @@
 from django.db import transaction
-from django.shortcuts import get_object_or_404
-from recipes.models import (Favorite, Follow, Ingredient,
-                            IngredientForRecipe, Recipe, ShoppingCart, Tag)
+from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
+                            Recipe, ShoppingCart, Tag)
 from rest_framework import serializers
 from users.models import User
 
-from .utils import is_me
 from .fields import Base64ImageField
+from .utils import is_me
 
 
 class PasswordSerializer(serializers.BaseSerializer):
@@ -31,7 +30,7 @@ class PasswordSerializer(serializers.BaseSerializer):
             raise serializers.ValidationError(
                 'Длина пароля должна быть не меньше 8 символов'
             )
-        return data    
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):
