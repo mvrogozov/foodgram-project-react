@@ -16,6 +16,7 @@ class Ingredient(models.Model):
 
     class Meta:
         ordering = ('name',)
+        indexes = (models.Index(fields=('name',)),)
 
     def __str__(self):
         return self.name
@@ -89,6 +90,7 @@ class Recipe(CreatedModel):
                 name='uniquie recipe for author'
             )
         ]
+        indexes = (models.Index(fields=('name',)),)
 
     def __str__(self):
         return self.name

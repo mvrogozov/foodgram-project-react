@@ -1,7 +1,8 @@
 from django.db import transaction
-from recipes.models import Favorite, Follow, Ingredient, IngredientForRecipe
-from recipes.models import Recipe, ShoppingCart, Tag
 from rest_framework import serializers
+
+from recipes.models import Favorite, Follow, Ingredient, IngredientForRecipe
+from recipes.models import Recipe, ShoppingCart, Tag                           
 from users.models import User
 
 from .fields import Base64ImageField

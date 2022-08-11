@@ -2,13 +2,14 @@ from django.db.models import Count, Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
-                            Recipe, ShoppingCart, Tag)
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from recipes.models import Favorite, Follow, Ingredient, IngredientForRecipe
+from recipes.models import Recipe, ShoppingCart, Tag
 from users.models import User
 
 from .api_permissions import IsAuthorOrReadOnly
