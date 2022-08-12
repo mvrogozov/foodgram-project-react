@@ -113,7 +113,7 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         filters.SearchFilter,
         filters.OrderingFilter
     )
-    filterset_fields = ('name', 'tags')
+    filterset_fields = ('name', 'tags__tag_name')
     search_fields = ('name', 'tags__slug')
     ordering_fields = ('name', 'cooking_time')
     ordering = ('name',)
