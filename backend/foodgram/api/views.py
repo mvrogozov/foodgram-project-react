@@ -8,10 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from recipes.models import Favorite, Follow, Ingredient, IngredientForRecipe
-from recipes.models import Recipe, ShoppingCart, Tag
+from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
+                            Recipe, ShoppingCart, Tag)
 from users.models import User
-
 from .api_permissions import IsAuthorOrReadOnly
 from .mixins import CreateDeleteRecordMixin
 from .serializers import (IngredientSerializer, PasswordSerializer,

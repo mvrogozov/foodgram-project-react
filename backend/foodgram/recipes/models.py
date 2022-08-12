@@ -1,6 +1,7 @@
-from core.models import CreatedModel
 from django.core.validators import MinValueValidator
 from django.db import models
+
+from core.models import CreatedModel
 from users.models import User
 
 
