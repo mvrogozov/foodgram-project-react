@@ -11,17 +11,13 @@ services:
     env_file:
       - ./.env
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: mvrogozov/fg_frontend
     volumes:
       - ../frontend/:/app/result_build/
     #depends_on:
       #- backend
   backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: mvrogozov/fg_backend
     command: >
       sh -c "python3 manage.py collectstatic --noinput &&
              python3 manage.py migrate &&
