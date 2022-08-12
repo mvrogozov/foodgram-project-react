@@ -25,14 +25,14 @@ jobs:
         with:
           context: backend
           push: true
-          tags: mvrogozov/foodrgam
+          tags: mvrogozov/fg_backend
 
       - name: Push to Docker Hub frontend
         uses: docker/build-push-action@v2
         with:
           context: frontend
           push: true
-          tags: mvrogozov/foodgram
+          tags: mvrogozov/fg_frontend
 
   deploy:
     runs-on: ubuntu-latest
