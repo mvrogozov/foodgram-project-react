@@ -169,14 +169,20 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         shopping_list = {}
         ingredients_for_all = IngredientForRecipe.objects.filter(
             recipe__in=cart
-        ).annotate(total=Sum('amount', distinct=True)).order_by(
+        ).values(
+            'ingredient_name__name', 'ingredient_name__measurement_unit'
+            ).annotate(total=Sum('amount', )).order_by(
             'ingredient_name'
         )
         for ingredient in ingredients_for_all:
-            shopping_list.setdefault(ingredient.ingredient_name, [0, ''])
-            shopping_list[ingredient.ingredient_name][0] = ingredient.total
-            shopping_list[ingredient.ingredient_name][1] = (
-                ingredient.ingredient_name.measurement_unit
+            shopping_list.setdefault(
+                ingredient['ingredient_name__name'], [0, '']
+            )
+            shopping_list[
+                ingredient['ingredient_name__name']
+                ][0] = ingredient['total']
+            shopping_list[ingredient['ingredient_name__name']][1] = (
+                ingredient['ingredient_name__measurement_unit']
             )
         buffer = create_pdf(shopping_list)
         return FileResponse(
