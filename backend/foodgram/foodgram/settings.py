@@ -64,7 +64,7 @@ TEMPLATES = [
         },
     },
 ]
-# 'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
+#  'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
