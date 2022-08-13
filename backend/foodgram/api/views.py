@@ -178,6 +178,8 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
             shopping_list[ingredient.ingredient_name][1] = (
                 ingredient.ingredient_name.measurement_unit
             )
+        print('\n ing queryset = ', ingredients_for_all)
+        print('\n sh list= ', shopping_list)
         buffer = create_pdf(shopping_list)
         return FileResponse(
             buffer, as_attachment=True, filename='shopping list.pdf'
