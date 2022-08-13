@@ -7,7 +7,7 @@ services:
       - POSTGRES_PASSWORD=xxxyyyzzz
       - POSTGRES_DB=foodgram
     volumes:
-      - /var/lib/postgresql/data/
+      - .db:/var/lib/postgresql/data/
     env_file:
       - ./.env
   frontend:
@@ -18,10 +18,7 @@ services:
       #- backend
   backend:
     image: mvrogozov/fg_backend
-    command: >
-      sh -c "python3 manage.py collectstatic --noinput &&
-             python3 manage.py migrate &&
-             gunicorn --bind 0.0.0.0:8000 foodgram.wsgi"
+    restart: always
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/

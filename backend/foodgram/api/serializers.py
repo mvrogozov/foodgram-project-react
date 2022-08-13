@@ -229,9 +229,10 @@ class RecipePostSerializer(RecipeSerializer):
 
     def validate(self, attrs):
         user = self.context.get('request').user
-        pk = self.context['view'].kwargs.get('pk')
-        if Recipe.objects.get(pk=pk).name == attrs['name']:
-            return attrs
+        if self.context.get('request').method == 'PATCH':
+            pk = self.context['view'].kwargs.get('pk')
+            if Recipe.objects.get(pk=pk).name == attrs['name']:
+                return attrs
         if Recipe.objects.filter(name=attrs['name'], author=user):
             raise serializers.ValidationError(
                 'У Вас есть рецепт с таким именем'
