@@ -203,4 +203,4 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     #filter_backends = (filters.SearchFilter, DjangoFilterBackend,)
     #search_fields = ('^name',)
     #filterset_fields = ('name',)
-    #pagination_class = None
+    pagination_class = None
