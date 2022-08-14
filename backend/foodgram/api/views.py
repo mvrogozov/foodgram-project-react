@@ -105,8 +105,6 @@ class UserViewSet(ModelViewSet):
             return Response(status=status.HTTP_200_OK)
         return Response('wrong password', status=status.HTTP_401_UNAUTHORIZED)
 
-        
-
 
 class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
     queryset = Recipe.objects.all()
@@ -117,7 +115,6 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         filters.OrderingFilter
     )
     filterset_class = RecipeFilter
-    #filterset_fields = ('name', 'tags')
     search_fields = ('name', 'tags__slug')
     ordering_fields = ('name', 'cooking_time')
     ordering = ('name',)
