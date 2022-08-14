@@ -12,7 +12,7 @@ from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
                             Recipe, ShoppingCart, Tag)
 from users.models import User
 from .api_permissions import IsAuthorOrReadOnly
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientSearchFilter
 from .mixins import CreateDeleteRecordMixin
 from .serializers import (IngredientSerializer, PasswordSerializer,
                           RecipePostSerializer, RecipeSerializer,
@@ -200,7 +200,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend,)
+    filter_backends = (IngredientSearchFilter, DjangoFilterBackend,)
     search_fields = ('^name',)
-    filterset_fields = ('name',)
+    filterset_fields = ('name',)#
     pagination_class = None
