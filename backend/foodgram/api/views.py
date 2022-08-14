@@ -17,7 +17,7 @@ from .mixins import CreateDeleteRecordMixin
 from .serializers import (IngredientSerializer, PasswordSerializer,
                           RecipePostSerializer, RecipeSerializer,
                           ShortRecipeSerializer, SubscriptionSerializer,
-                          TagSerializer, UserPostSerializer, UserSerializer)
+                          TagSerializer, UserFollowSerializer, UserPostSerializer, UserSerializer)
 from .utils import create_pdf
 
 
@@ -50,12 +50,12 @@ class UserViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated]
         )
     def subscriptions(self, request):
-        user = get_object_or_404(User, username=request.user.username)
-        queryset = user.follower.all().annotate(
-            recipes_count=Count('author__recipes')
+        authors = request.user.follower.all().values_list('author', flat=True)
+        queryset = User.objects.filter(pk__in=authors).annotate(
+            recipes_count=Count('recipes')
         )
         pages = self.paginate_queryset(queryset)
-        serializer = SubscriptionSerializer(
+        serializer = UserFollowSerializer(
             many=True,
             instance=pages,
             context={'request': request}

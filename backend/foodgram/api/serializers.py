@@ -279,6 +279,7 @@ class ShortRecipeSerializer(RecipeSerializer):
 
 class UserFollowSerializer(UserSerializer):
     recipes = ShortRecipeSerializer(many=True)
+    recipes_count = serializers.IntegerField()
 
     class Meta(UserSerializer.Meta):
         fields = (
@@ -288,7 +289,8 @@ class UserFollowSerializer(UserSerializer):
             'first_name',
             'last_name',
             'is_subscribed',
-            'recipes'
+            'recipes',
+            'recipes_count'
         )
 
 
