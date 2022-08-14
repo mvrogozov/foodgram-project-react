@@ -8,6 +8,11 @@ class IngredientSearchFilter(filters.SearchFilter):
     search_param = 'name'
 
 
+class IngredientFilter(rf_filters.FilterSet):
+    pass
+
+
+
 class RecipeFilter(rf_filters.FilterSet):
     tags = rf_filters.AllValuesMultipleFilter(
         field_name='tags__slug',
@@ -18,4 +23,4 @@ class RecipeFilter(rf_filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['tags', ]
+        fields = ['tags', 'author']
