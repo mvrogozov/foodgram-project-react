@@ -109,8 +109,9 @@ class IngredientForRecipeSerializer(serializers.ModelSerializer):
 
 class ForRecipeSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient_name.id')
-    
-    name = serializers.SlugRelatedField(
+    name = serializers.ReadOnlyField(source='ingredient_name.name')
+    measurement_unit = serializers.ReadOnlyField(source='ingredient_name.measurement_unit')
+    '''name = serializers.SlugRelatedField(
         slug_field='name',
         queryset=Ingredient.objects.all(),
         source='ingredient_name',
@@ -121,7 +122,7 @@ class ForRecipeSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(),
         source='ingredient_name',
         required=False
-    )
+    )'''
 
     class Meta:
         model = IngredientForRecipe
