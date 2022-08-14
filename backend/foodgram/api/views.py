@@ -54,12 +54,13 @@ class UserViewSet(ModelViewSet):
         queryset = user.follower.all().annotate(
             recipes_count=Count('author__recipes')
         )
+        pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(
             many=True,
-            instance=queryset,
-            context = {'request': request}
+            instance=pages,
+            context={'request': request}
             )
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
@@ -206,5 +207,5 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (IngredientSearchFilter, DjangoFilterBackend,)
     search_fields = ('^name',)
-    filterset_fields = ('name__icontains',)
+    filterset_fields = ('name',)
     pagination_class = None
