@@ -108,9 +108,8 @@ class IngredientForRecipe(models.Model):
         related_name='for_recipe',
         on_delete=models.CASCADE
     )
-    amount = models.FloatField(
+    amount = models.IntegerField(
         'Количество',
-        max_length=10,
         validators=(MinValueValidator(1),)
     )
 

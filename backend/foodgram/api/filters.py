@@ -3,7 +3,7 @@ from recipes.models import Recipe
 
 
 class RecipeFilter(rf_filters.FilterSet):
-    tags = rf_filters.CharFilter(field_name='tags__tag_name')
+    tags = rf_filters.CharFilter(field_name='tags__slug')
 
     class Meta:
         model = Recipe
