@@ -245,7 +245,7 @@ class RecipePostSerializer(RecipeSerializer):
         IngredientForRecipe.objects.bulk_create(ingredients_to_add)
         return ingredients_to_add
 
-    #@transaction.atomic()
+    @transaction.atomic()
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredient')
         tags = validated_data.pop('tags')
