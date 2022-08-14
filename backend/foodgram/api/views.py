@@ -12,6 +12,7 @@ from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
                             Recipe, ShoppingCart, Tag)
 from users.models import User
 from .api_permissions import IsAuthorOrReadOnly
+from .filters import RecipeFilter
 from .mixins import CreateDeleteRecordMixin
 from .serializers import (IngredientSerializer, PasswordSerializer,
                           RecipePostSerializer, RecipeSerializer,
@@ -104,6 +105,8 @@ class UserViewSet(ModelViewSet):
             return Response(status=status.HTTP_200_OK)
         return Response('wrong password', status=status.HTTP_401_UNAUTHORIZED)
 
+        
+
 
 class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
     queryset = Recipe.objects.all()
@@ -113,7 +116,8 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         filters.SearchFilter,
         filters.OrderingFilter
     )
-    filterset_fields = ('name', 'tags__tag_name')
+    filterset_class = RecipeFilter
+    #filterset_fields = ('name', 'tags')
     search_fields = ('name', 'tags__slug')
     ordering_fields = ('name', 'cooking_time')
     ordering = ('name',)
@@ -184,8 +188,6 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
             shopping_list[ingredient['ingredient_name__name']][1] = (
                 ingredient['ingredient_name__measurement_unit']
             )
-        print('\n ing queryset = ', ingredients_for_all)
-        print('\n sh list= ', shopping_list)
         buffer = create_pdf(shopping_list)
         return FileResponse(
             buffer, as_attachment=True, filename='shopping list.pdf'
