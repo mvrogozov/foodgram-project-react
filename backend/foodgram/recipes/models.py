@@ -17,7 +17,7 @@ class Ingredient(models.Model):
 
     class Meta:
         ordering = ('name',)
-        #indexes = (models.Index(fields=('name',)),)
+        indexes = (models.Index(fields=('name',)),)
 
     def __str__(self):
         return self.name
@@ -108,8 +108,9 @@ class IngredientForRecipe(models.Model):
         related_name='for_recipe',
         on_delete=models.CASCADE
     )
-    amount = models.IntegerField(
+    amount = models.FloatField(
         'Количество',
+        max_length=10,
         validators=(MinValueValidator(1),)
     )
 

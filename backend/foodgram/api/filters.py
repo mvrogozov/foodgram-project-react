@@ -5,7 +5,7 @@ from users.models import User
 
 
 class IngredientSearchFilter(filters.SearchFilter):
-    search_param = 'ingredient_name'
+    search_param = 'name'
 
 
 class RecipeFilter(rf_filters.FilterSet):
