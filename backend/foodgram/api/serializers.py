@@ -1,10 +1,11 @@
 from django.db import transaction
+from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
 from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
                             Recipe, ShoppingCart, Tag)
 from users.models import User
-from .fields import Base64ImageField
+#from .fields import Base64ImageField
 from .utils import is_me
 
 

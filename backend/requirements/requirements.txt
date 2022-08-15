@@ -34,6 +34,7 @@ django==3.2.14
     #   djangohexadecimalfield
     #   djangorestframework
     #   djangorestframework-simplejwt
+    #   drf-base64
 django-debug-toolbar==3.5.0
     # via -r requirements.in
 django-filter==22.1
@@ -46,11 +47,14 @@ djangorestframework==3.13.1
     # via
     #   -r requirements.in
     #   djangorestframework-simplejwt
+    #   drf-base64
 djangorestframework-simplejwt==4.8.0
     # via
     #   -r requirements.in
     #   djoser
 djoser==2.1.0
+    # via -r requirements.in
+drf-base64==2.0
     # via -r requirements.in
 gunicorn==20.1.0
     # via -r requirements.in
