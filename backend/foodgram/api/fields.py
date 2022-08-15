@@ -7,7 +7,7 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 
-class qBase64ImageField(serializers.ImageField):
+class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, six.string_types):
             # Check if the base64 string is in the "data:" format
@@ -39,7 +39,7 @@ class qBase64ImageField(serializers.ImageField):
         return extension
 
 
-class Base64ImageField(serializers.Field):
+class Bwase64ImageField(serializers.Field):
 
     def to_representation(self, value):
         return str(value)
@@ -50,7 +50,7 @@ class Base64ImageField(serializers.Field):
 
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+            data = ContentFile(base64.b64decode(imgstr), name='/mediafiles/'+'temp.' + ext)
 
         except ValueError:
             raise serializers.ValidationError('wrong image')
