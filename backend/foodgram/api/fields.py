@@ -39,7 +39,7 @@ class qBase64ImageField(serializers.ImageField):
         return extension
 
 
-class Bsase64ImageField(serializers.Field):
+class Base64ImageField(serializers.Field):
 
     def to_representation(self, value):
         return str(value)
