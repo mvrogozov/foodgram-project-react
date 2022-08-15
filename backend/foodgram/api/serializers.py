@@ -140,7 +140,7 @@ class ForRecipePostSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    image = Base64ImageField(use_url=True)
+    image = Base64ImageField()
     ingredients = ForRecipeSerializer(
         source='ingredient',
         many=True
