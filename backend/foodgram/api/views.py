@@ -17,7 +17,8 @@ from .mixins import CreateDeleteRecordMixin
 from .serializers import (IngredientSerializer, PasswordSerializer,
                           RecipePostSerializer, RecipeSerializer,
                           ShortRecipeSerializer, SubscriptionSerializer,
-                          TagSerializer, UserFollowSerializer, UserPostSerializer, UserSerializer)
+                          TagSerializer, UserFollowSerializer,
+                          UserPostSerializer, UserSerializer)
 from .utils import create_pdf
 
 

@@ -37,21 +37,3 @@ class Base64ImageField(serializers.ImageField):
         extension = "jpg" if extension == "jpeg" else extension
 
         return extension
-
-
-class Bwase64ImageField(serializers.Field):
-
-    def to_representation(self, value):
-        return str(value)
-
-    def to_internal_value(self, data):
-        try:
-            # convert 64 to image
-
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='/mediafiles/'+'temp.' + ext)
-
-        except ValueError:
-            raise serializers.ValidationError('wrong image')
-        return data
