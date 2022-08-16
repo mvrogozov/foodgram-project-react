@@ -8,15 +8,6 @@ class IngredientSearchFilter(filters.SearchFilter):
     search_param = 'name'
 
 
-class UserFilter(rf_filters.FilterSet):
-    is_subscribed = rf_filters.BooleanFilter(method='filter_is_subscribed')
-
-    def filter_is_subsrcibed(self, queryset, name, value):
-        if value and not self.request.user.is_anonymous:
-            return queryset.filter(following__user=self.request.user)
-        return queryset
-
-
 class RecipeFilter(rf_filters.FilterSet):
     tags = rf_filters.AllValuesMultipleFilter(
         field_name='tags__slug',
