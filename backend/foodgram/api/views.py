@@ -24,8 +24,8 @@ from .utils import create_pdf
 
 class SubscriptionViewSet(ModelViewSet):
     serializer_class = SubscriptionSerializer
-    filter_backends=(DjangoFilterBackend,)
-    filterset_class=UserFilter
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = UserFilter
 
     def get_queryset(self):
         queryset = Follow.objects.filter(
@@ -83,7 +83,8 @@ class UserViewSet(ModelViewSet):
             serializer = SubscriptionSerializer(instance=following, many=True)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         following.delete()
-        return Response('Отписка выполнена', status=status.HTTP_204_NO_CONTENT)
+        serializer = SubscriptionSerializer(instance=following, many=True)
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
