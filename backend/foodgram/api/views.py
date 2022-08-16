@@ -171,7 +171,8 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
+        pagination_class=None
     )
     def download_shopping_cart(self, request):
         cart = Recipe.objects.filter(
