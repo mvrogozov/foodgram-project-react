@@ -116,7 +116,7 @@ class UserViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadOnly,)
-    pagination_class = (CustomPageNumberPaginator,)
+    pagination_class = CustomPageNumberPaginator
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
