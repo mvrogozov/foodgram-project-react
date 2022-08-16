@@ -81,10 +81,9 @@ class UserViewSet(ModelViewSet):
                 user=request.user, author=author
                 ).annotate(recipes_count=Count('author__recipes'))
             serializer = SubscriptionSerializer(instance=following, many=True)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response('done', status=status.HTTP_201_CREATED)
         following.delete()
-        serializer = SubscriptionSerializer(instance=following, many=True)
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        return Response('done', status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
