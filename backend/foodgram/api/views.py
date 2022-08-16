@@ -12,7 +12,7 @@ from recipes.models import (Favorite, Follow, Ingredient, IngredientForRecipe,
                             Recipe, ShoppingCart, Tag)
 from users.models import User
 from .api_permissions import IsAuthorOrReadOnly
-from .filters import RecipeFilter, IngredientSearchFilter
+from .filters import RecipeFilter, IngredientSearchFilter, UserFilter
 from .mixins import CreateDeleteRecordMixin
 from .serializers import (IngredientSerializer, PasswordSerializer,
                           RecipePostSerializer, RecipeSerializer,
@@ -24,6 +24,8 @@ from .utils import create_pdf
 
 class SubscriptionViewSet(ModelViewSet):
     serializer_class = SubscriptionSerializer
+    filter_backends=(DjangoFilterBackend,)
+    filterset_class=UserFilter
 
     def get_queryset(self):
         queryset = Follow.objects.filter(
@@ -133,7 +135,8 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
     @action(
         detail=True,
         methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
+        pagination_class=None
         )
     def shopping_cart(self, request, pk=None):
         return self.create_delete_record(
