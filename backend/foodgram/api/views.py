@@ -124,8 +124,8 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
     )
     filterset_class = RecipeFilter
     search_fields = ('name', 'tags__slug')
-    ordering_fields = ('name', 'cooking_time')
-    ordering = ('name',)
+    ordering_fields = ('name', 'cooking_time', 'created')
+    ordering = ('-created',)
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
