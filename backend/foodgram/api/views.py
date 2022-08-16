@@ -14,6 +14,7 @@ from users.models import User
 from .api_permissions import IsAuthorOrReadOnly
 from .filters import RecipeFilter, IngredientSearchFilter
 from .mixins import CreateDeleteRecordMixin
+from .paginators import CustomPageNumberPaginator
 from .serializers import (IngredientSerializer, PasswordSerializer,
                           RecipePostSerializer, RecipeSerializer,
                           ShortRecipeSerializer, SubscriptionSerializer,
@@ -115,6 +116,7 @@ class UserViewSet(ModelViewSet):
 class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadOnly,)
+    pagination_class = (CustomPageNumberPaginator,)
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -134,7 +136,6 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         detail=True,
         methods=['post', 'delete'],
         permission_classes=[IsAuthenticated],
-        pagination_class=None
         )
     def shopping_cart(self, request, pk=None):
         return self.create_delete_record(
@@ -169,10 +170,8 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         detail=False,
         methods=['get'],
         permission_classes=[IsAuthenticated],
-        pagination_class=None
     )
     def download_shopping_cart(self, request):
-        self.pagination_class = None
         cart = Recipe.objects.filter(
             shopping_cart__user=request.user
         ).values_list('id', flat=True)
