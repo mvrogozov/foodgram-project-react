@@ -15,6 +15,7 @@ class IngredientFilter(rf_filters.FilterSet):
 class RecipeFilter(rf_filters.FilterSet):
     tags = rf_filters.AllValuesMultipleFilter(
         field_name='tags__slug',
+        lookup_expr='icontains'
     )
     author = rf_filters.ModelMultipleChoiceFilter(
         queryset=User.objects.all()
