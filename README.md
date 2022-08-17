@@ -67,8 +67,19 @@ python3 manage.py runserver
 ```
 ### Возможен запуск в контейнерах Docker
 
-Для этого в папке foodgram-project-react/infra/
-запустить docker-compose. Настройки сервера nginx лежат в файле nginx.conf
+Настройки сервера nginx лежат в файле nginx.conf.
+На сервер скопировать файлы docker-compose.yml и nginx.conf, запустить docker-compose:
+```
+sudo docker-compose up
+```
+Переменные окружения, необходимые для запуска:
+
+* DB_ENGINE - настройка ENGINE для БД в django.settings
+* DB_HOST - имя хоста с БД (в проекте - 'db')
+* DB_NAME - имя БД (в проекте - 'postgres')
+* DB_PORT - порт для БД
+* POSTGRES_PASSWORD - пароль БД
+* POSTGRES_USER - пользователь БД
 
 ***
 Автор:
