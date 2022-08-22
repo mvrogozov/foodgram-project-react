@@ -1,8 +1,4 @@
 ![example workflow](https://github.com/mvrogozov/yamdb_final/actions/workflows/yamdb_workflow.yml/badge.svg)
-# praktikum_new_diplom
-http://51.250.18.154/
-admin
-qwaszxcv
 # Проект Foodgram.
 ***
 Проект Foodgram собирает рецепты пользователей.

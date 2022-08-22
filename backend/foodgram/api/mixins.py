@@ -9,7 +9,6 @@ class CreateDeleteRecordMixin:
         self,
         request,
         pair_model,
-        user_model,
         through_model,
         pair_field,
         serializer,

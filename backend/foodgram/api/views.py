@@ -141,7 +141,6 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         return self.create_delete_record(
             request=request,
             pair_model=Recipe,
-            user_model=User,
             through_model=ShoppingCart,
             pair_field='recipe',
             serializer=ShortRecipeSerializer,
@@ -158,7 +157,6 @@ class RecipeViewSet(ModelViewSet, CreateDeleteRecordMixin):
         return self.create_delete_record(
             request,
             pair_model=Recipe,
-            user_model=User,
             through_model=Favorite,
             pair_field='recipe',
             serializer=ShortRecipeSerializer,
