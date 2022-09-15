@@ -1,4 +1,4 @@
-'''pytest_plugins = [
-    'tests.fixtures.fixture_user',
-    'tests.fixtures.fixture_data',
-]'''
+pytest_plugins = [
+    'tests.fixtures.fixtures_user',
+    'tests.fixtures.fixtures_data',
+]
